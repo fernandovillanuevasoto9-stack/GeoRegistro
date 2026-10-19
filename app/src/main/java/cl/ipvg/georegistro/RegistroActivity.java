@@ -1,7 +1,12 @@
 package cl.ipvg.georegistro;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,13 +18,17 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-public class RegistroActivity extends AppCompatActivity {
+public class RegistroActivity extends AppCompatActivity implements SensorEventListener {
 
     private EditText etTitulo, etDescripcion, etCategoria, etLatitud, etLongitud;
     private Button btnGuardar;
     private FusedLocationProviderClient fusedLocationClient;
     private FirebaseFirestore db;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
+
+    private SensorManager sensorManager;
+    private Sensor acelerometro;
+    private long ultimoTiempoAct = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +49,52 @@ public class RegistroActivity extends AppCompatActivity {
         obtenerUbicacion();
 
         btnGuardar.setOnClickListener(v -> validarYGuardar());
+
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) {
+            acelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        }
+
+        if (acelerometro == null) {
+            Toast.makeText(this, "Aviso: Este dispositivo no cuenta con acelerómetro", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (acelerometro != null) {
+            sensorManager.registerListener(this, acelerometro, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (acelerometro != null) {
+            sensorManager.unregisterListener(this);
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            double aceleracion = Math.sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH;
+
+            long tiempoActual = System.currentTimeMillis();
+            if (aceleracion > 12 && (tiempoActual - ultimoTiempoAct > 2000)) {
+                ultimoTiempoAct = tiempoActual;
+                Toast.makeText(this, "¡Movimiento detectado! Puedes guardar la incidencia.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
     private void obtenerUbicacion() {

@@ -29,6 +29,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".RegistroActivity" />
+        <activity android:name=".ListadoActivity" />
+        <activity android:name=".MapaActivity" />
     </application>
 
 </manifest>
