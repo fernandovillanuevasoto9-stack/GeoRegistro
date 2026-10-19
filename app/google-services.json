@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "502039992892",
+    "project_id": "georegistro-7fe99",
+    "storage_bucket": "georegistro-7fe99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502039992892:android:7d0421ec403089f6480139",
+        "android_client_info": {
+          "package_name": "cl.ipvg.georegistro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFIYzCCNqftZGfkm5DTj3gCdPtORkfgss"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

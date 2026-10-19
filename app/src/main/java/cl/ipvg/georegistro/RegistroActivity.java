@@ -11,18 +11,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegistroActivity extends AppCompatActivity {
 
     private EditText etTitulo, etDescripcion, etCategoria, etLatitud, etLongitud;
     private Button btnGuardar;
     private FusedLocationProviderClient fusedLocationClient;
+    private FirebaseFirestore db;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registro);
+
+        db = FirebaseFirestore.getInstance();
 
         etTitulo = findViewById(R.id.etTitulo);
         etDescripcion = findViewById(R.id.etDescripcion);
@@ -70,13 +74,30 @@ public class RegistroActivity extends AppCompatActivity {
         String titulo = etTitulo.getText().toString().trim();
         String descripcion = etDescripcion.getText().toString().trim();
         String categoria = etCategoria.getText().toString().trim();
-        String latitud = etLatitud.getText().toString().trim();
+        String latStr = etLatitud.getText().toString().trim();
+        String lonStr = etLongitud.getText().toString().trim();
 
-        if (titulo.isEmpty() || descripcion.isEmpty() || categoria.isEmpty() || latitud.isEmpty()) {
+        if (titulo.isEmpty() || descripcion.isEmpty() || categoria.isEmpty() || latStr.isEmpty() || lonStr.isEmpty()) {
             Toast.makeText(this, "Completa los campos y espera la ubicación", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Toast.makeText(this, "Validación exitosa. Listo para Firebase.", Toast.LENGTH_SHORT).show();
+        double latitud = Double.parseDouble(latStr);
+        double longitud = Double.parseDouble(lonStr);
+        long timestamp = System.currentTimeMillis();
+
+        Incidencia nuevaIncidencia = new Incidencia(titulo, descripcion, categoria, latitud, longitud, timestamp);
+
+        // Guardar en Firestore
+        db.collection("incidencias")
+            .add(nuevaIncidencia)
+            .addOnSuccessListener(documentReference -> {
+                Toast.makeText(this, "Incidencia guardada con éxito", Toast.LENGTH_SHORT).show();
+                finish(); // Cierra la pantalla y vuelve al menú principal
+            })
+            .addOnFailureListener(e -> {
+                // Manejo de errores sin cerrar la aplicación (RF03)
+                Toast.makeText(this, "Error al guardar. Revisa tu conexión a red.", Toast.LENGTH_LONG).show();
+            });
     }
 }
